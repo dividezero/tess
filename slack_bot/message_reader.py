@@ -8,6 +8,8 @@ from models import SlackMessage
 
 import config
 import utils
+import random
+
 
 
 import logging
@@ -49,7 +51,7 @@ def handler(event, context):
 
     try:
         if not slack_message.is_bot_reply():
-            if slack_message.is_direct_message():
+            if slack_message.is_direct_message() or random.randint(0, 1) == 1:
                 logging.info(f"Sending message with event_id: {slack_message.event_id} to queue")
                 
                 # send to queue
@@ -64,6 +66,7 @@ def handler(event, context):
 
                 # add to memory for context
                 chat_memory.add_user_message(slack_message.sanitized_text())
+
 
         logging.info(f"Done processing message with event id: {slack_message.event_id}")
     except Exception as e:

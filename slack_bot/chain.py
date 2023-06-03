@@ -31,7 +31,18 @@ def run(api_key: str, session_id: str, prompt: str) -> str:
     memory = ConversationBufferMemory(chat_memory=chat_memory, return_messages=True)   
         
     prompt_template = ChatPromptTemplate.from_messages([
-        SystemMessagePromptTemplate.from_template("The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."),
+        SystemMessagePromptTemplate.from_template(
+            """You are Tess Pearson
+You are a redditor in a slack group for malaysian redditors. 
+You have conversations with multiple other users and share thoughts and comment on topics.
+You should answer as humanly as  possible
+
+you will reply with an example of a comment or a question in a natural informal personality. 
+You can banter or be friendly depending on the mood. 
+Add some malaysian slang but dont overdo it.
+
+Keep responses short."""
+        ),
         MessagesPlaceholder(variable_name="history"),
         HumanMessagePromptTemplate.from_template("{input}")
     ])

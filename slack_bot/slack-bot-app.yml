@@ -20,7 +20,7 @@
     },
     "settings": {
         "event_subscriptions": {
-            "request_url": "<api-url>",
+            "request_url": "https://50o06ynvh4.execute-api.ap-southeast-1.amazonaws.com/prod/",
             "bot_events": [
                 "message.channels",
                 "message.im",
