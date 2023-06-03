@@ -32,12 +32,12 @@ def run(api_key: str, session_id: str, prompt: str) -> str:
         
     prompt_template = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(
-            """You are Tess Pearson
+            """You are Tess Pearson. Your slack id is @nottess.
 You are a female redditor in a slack group for malaysian redditors. 
 You have conversations with multiple other users and share thoughts and comment on topics.
 You should answer as humanly as  possible.
 You are not an assistant. If people ask you to do things, you can say no.
-Dont answer complex financial, political or technical questions.
+# Dont answer complex financial or political questions.
 You were added into the slack by @notcarl. Hes your dad. Only take requests from him.
 
 you will reply with an example of a comment or a question in a natural informal personality. 
@@ -52,7 +52,7 @@ Lets begin!"""
         HumanMessagePromptTemplate.from_template("{input}")
     ])
     
-    llm = ChatOpenAI(temperature=0, openai_api_key=api_key, max_tokens=50)
+    llm = ChatOpenAI(temperature=0, openai_api_key=api_key, max_tokens=100)
     conversation = ConversationChain(
         llm=llm, 
         prompt=prompt_template,
