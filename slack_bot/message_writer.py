@@ -35,7 +35,7 @@ def handler(event, context):
         
         response_text = chain.run(
             api_key=API_KEY, 
-            session_id=slack_message.thread, 
+            session_id=slack_message.channel,
             prompt=slack_message.sanitized_text()
         )
         
@@ -45,7 +45,6 @@ def handler(event, context):
 
         client.chat_postMessage(
             channel=slack_message.channel,
-            thread_ts=slack_message.thread,
             text=response_text
         )
     except SlackApiError as e:

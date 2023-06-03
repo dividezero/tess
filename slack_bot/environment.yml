@@ -1,4 +1,4 @@
-name: langchain-aws-slack-bot
+name: tess
 channels:
   - https://conda.anaconda.org/conda-forge
 dependencies:
