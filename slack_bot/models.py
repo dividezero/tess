@@ -7,7 +7,8 @@ class SlackMessage:
     def __init__(self, body: Dict):
         self.body = body
         self.message_event = body["event"]
-        self.event_id = body["event_id"] 
+        self.user = "<@" + body["event"]["user"] + ">"
+        self.event_id = body["event_id"]
         self.channel = self.message_event["channel"]
         self.text = self.message_event["text"]
         if "authorizations" in body:

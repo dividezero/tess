@@ -55,5 +55,7 @@ class Config:
     # Queue name for the slack messages
     MESSAGE_QUEUE_NAME = "slack-bot-message-queue.fifo"
 
+    BOT_SLACK_ID = "<@U05AGPYH97G>"
+
 
 config = Config()

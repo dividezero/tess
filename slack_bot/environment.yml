@@ -2,12 +2,13 @@ name: tess
 channels:
   - https://conda.anaconda.org/conda-forge
 dependencies:
-  - python=3.9
+  - python=3.10
   - pip
   - pip:
     - aws-cdk-lib
-    - langchain==0.0.126
+    - langchain==0.0.188
     - boto3
     - requests
     - openai
     - slack_sdk
+    - google-search-results

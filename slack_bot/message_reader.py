@@ -2,21 +2,14 @@ import json
 
 import boto3
 
-from langchain.memory import DynamoDBChatMessageHistory
 from models import SlackMessage
-
+from history import DynamoChatHistoryHelper, ChatSession
 
 import config
 import utils
+import time
 import random
 
-from langchain.schema import (
-    BaseMessage,
-    HumanMessage,
-    _message_to_dict,
-    messages_from_dict,
-    messages_to_dict,
-)
 
 import logging
 logger = logging.getLogger()
@@ -49,19 +42,43 @@ def handler(event, context):
     slack_message = SlackMessage(body)
     print('slack_message', body)
     print('slack_message.channel', slack_message.channel)
-    chat_memory = CustomDynamoDBChatMessageHistory(
-        table_name=config.config.DYNAMODB_TABLE_NAME,
-        session_id=slack_message.channel
-    )
-    messages = chat_memory.messages
+    history_helper = DynamoChatHistoryHelper(config.config.DYNAMODB_TABLE_NAME)
+    session = history_helper.get_session(slack_message.channel)
+    if not session:
+        session= ChatSession(sessionId=slack_message.channel, history=[], lastEventId="")
 
     logging.debug(f"Thread id is {slack_message.channel}")
 
-    try:
-        if not slack_message.is_bot_reply():
-            if slack_message.is_direct_message() or random.randint(0, 1) == 1:
-                logging.info(f"Sending message with event_id: {slack_message.event_id} to queue")
+    tag_expiry = session.lastTagged + 30 * 60
 
+    print('direct message', slack_message.is_direct_message())
+    random_run = random.randint(0, 1) == 1
+    print('random_run', random_run)
+    tag_not_expired = tag_expiry > time.time()
+    print('tag_not_expired', tag_not_expired)
+    last_event_id = session.lastEventId if session.lastEventId else ""
+
+    print('slack_message.is_bot_reply()', slack_message.is_bot_reply())
+    print('last_event_id != slack_message.event_id', last_event_id != slack_message.event_id)
+
+    try:
+        if not slack_message.is_bot_reply() and last_event_id != slack_message.event_id:
+            print(f"Saving message with event_id: {slack_message.event_id} to history")
+            print(slack_message.sanitized_text())
+            # add to memory for context
+            session.append_history(
+                userType="human",
+                user=slack_message.user,
+                content=slack_message.sanitized_text())
+            session.lastEventId = slack_message.event_id
+            if slack_message.is_direct_message():
+                session.newTag()
+
+            history_helper.save_session(session)
+
+            if slack_message.is_direct_message() or (random_run and tag_not_expired):
+                logging.info(f"Sending message with event_id: {slack_message.event_id} to queue")
+                print("triggering message")
                 # send to queue
                 sqs.send_message(
                     QueueUrl=queue_url["QueueUrl"],
@@ -69,11 +86,6 @@ def handler(event, context):
                     MessageGroupId=str(slack_message.channel),
                     MessageDeduplicationId=slack_message.event_id
                 )
-            elif messages:
-                logging.debug(f"Saving message with event_id: {slack_message.event_id} to history")
-
-                # add to memory for context
-                chat_memory.add_user_message(slack_message.sanitized_text())
 
 
         logging.info(f"Done processing message with event id: {slack_message.event_id}")
@@ -82,23 +94,3 @@ def handler(event, context):
 
     return utils.build_response("Processed message successfully!")
 
-
-class CustomDynamoDBChatMessageHistory(DynamoDBChatMessageHistory):
-    def append(self, message: BaseMessage) -> None:
-        print("ATTENTION: custom class")
-        """Append the message to the record in DynamoDB"""
-        from botocore.exceptions import ClientError
-
-        messages = messages_to_dict(self.messages)
-        _message = _message_to_dict(message)
-        messages.append(_message)
-
-        # limit memory to recent chats
-        messages = messages[-10:]
-
-        try:
-            self.table.put_item(
-                Item={"SessionId": self.session_id, "History": messages}
-            )
-        except ClientError as err:
-            logger.error(err)

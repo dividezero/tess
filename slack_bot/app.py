@@ -21,11 +21,11 @@ class SlackBotApp(Stack):
         )
 
         queue = sqs.Queue(
-            self, 
-            config.config.MESSAGE_QUEUE_NAME, 
+            self,
+            config.config.MESSAGE_QUEUE_NAME,
             queue_name=config.config.MESSAGE_QUEUE_NAME,
             fifo=True,
-            visibility_timeout=Duration.minutes(5)
+            visibility_timeout=Duration.minutes(2)
         )
 
         layer = lambda_.LayerVersion.from_layer_version_arn(
@@ -58,7 +58,7 @@ class SlackBotApp(Stack):
         post_integration = apigateway.LambdaIntegration(handler)
 
         api.root.add_method(
-            "POST", 
+            "POST",
             post_integration
         )
 
@@ -68,7 +68,7 @@ class SlackBotApp(Stack):
             code=lambda_.Code.from_asset("dist_writer/lambda.zip"),
             handler="message_writer.handler",
             layers=[layer],
-            timeout=Duration.minutes(5)
+            timeout=Duration.minutes(2)
         )
         secret.grant_read(writer_handler)
         queue.grant_consume_messages(writer_handler)
