@@ -46,7 +46,7 @@ class ChatSession:
 
     def append_history(self, userType, user, content):
         self.history.append(ChatMessage(userType, user, content))
-        new_history = self.history[-10:]
+        new_history = self.history[-5:]
         self.history = new_history
 
     def newTag(self):

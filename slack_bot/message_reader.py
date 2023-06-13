@@ -66,10 +66,12 @@ def handler(event, context):
             print(f"Saving message with event_id: {slack_message.event_id} to history")
             print(slack_message.sanitized_text())
             # add to memory for context
-            session.append_history(
-                userType="human",
-                user=slack_message.user,
-                content=slack_message.sanitized_text())
+            if slack_message.sanitized_text():
+                session.append_history(
+                    userType="human",
+                    user=slack_message.user,
+                    content=slack_message.sanitized_text())
+
             session.lastEventId = slack_message.event_id
             if slack_message.is_direct_message():
                 session.newTag()

@@ -28,9 +28,9 @@ def handler(event, context):
 
     try:
         # SECRETS = utils.get_secrets()
-        API_KEY = "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"
-        SLACK_TOKEN = "xoxb-68007742017-5356814587254-WjqoB9ZR2waQUAjSnvPmi8yW"
-        SERPAPI_KEY = "c1f5b8d12c5d1c3ff3bbae9f28fee09309201013a76e76f32ac138c32ae2c460"
+        API_KEY = "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"
+        SLACK_TOKEN = "xoxb-68007742017-5356814587254-bgY11OTvcqZ1tMOSTHCfE3dV"
+        SERPAPI_KEY = "62f5e1829db211dcfdf9553271a27d2441cdf839"
 
         logging.info(f"Sending message with event_id: {slack_message.event_id} to LLM chain")
 

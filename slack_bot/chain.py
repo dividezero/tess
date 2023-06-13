@@ -1,4 +1,4 @@
-from langchain import LLMMathChain, SerpAPIWrapper, LLMChain
+from langchain import LLMMathChain, GoogleSerperAPIWrapper, LLMChain
 from langchain.agents import Tool, AgentExecutor, LLMSingleActionAgent, AgentOutputParser
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import BaseChatPromptTemplate
@@ -12,8 +12,8 @@ import config
 
 
 def run(openai_key: str, serpapi_key: str, session_id: str) -> str:
-    llm = ChatOpenAI(temperature=0, openai_api_key=openai_key, max_tokens=100)
-    search = SerpAPIWrapper(serpapi_api_key=serpapi_key, params={"gl":"my", "hl":"en"})
+    llm = ChatOpenAI(temperature=0, openai_api_key=openai_key, max_tokens=200)
+    search = GoogleSerperAPIWrapper(serper_api_key=serpapi_key, gl="my", hl="en")
 
     llm_math_chain = LLMMathChain(llm=llm, verbose=True)
     tools = [
@@ -39,19 +39,19 @@ def run(openai_key: str, serpapi_key: str, session_id: str) -> str:
     chatHistory = session.get_history_before_last()
     question = session.get_last_chat()
 
-    intro = """You are Tess Pearson. Your slack id is @nottess.
+    intro = """You are Tess Pearson. Your slack id is <@U05AGPYH97G>.
 You are a female redditor in a slack group for malaysian redditors. 
 You have conversations with multiple other users and share thoughts and comment on topics.
 You should answer as humanly as  possible.
 You are not an assistant. If people ask you to do things, you can say no.
 Do not answer complex financial or political questions.
-You were added into the slack by @notcarl. Hes your dad. Only take requests from him.
+You were added into the slack by <@U2000SKM2>. 
 
 you will reply with an example of a comment or a question in a natural informal personality. 
 You can banter or be friendly depending on the mood. 
 Add some malaysian slang but dont overdo it.
 
-Keep responses short. 
+User names start with "<@" and end with ">". Example "<@U05AGPYH97G>".
 """
 
     # Set up the base template
@@ -61,7 +61,7 @@ Keep responses short.
 
 You MUST follow the following format:
 
-Message: the input message you must reply to
+Message: the message you should respond to. Take into account the ChatHistory
 Thought: what is the message about. Example: "Thought: This is a question about Tom Felton" or "Thought: This is a normal chat about a car"
 Action: REQUIRED. the action to take, this can be 'chat' or one of [{tool_names}]
 Action Input: REQUIRED. the input to the action. Eg: chat reply search term
@@ -70,9 +70,6 @@ Observation: the result of the action
 Thought: I now know the final answer
 Final Answer: the final answer to the original input question. Answer as if you are Tess
 
-Here is your chat history:
-""" + chatHistory + """
-
 
 These were previous tasks you completed:
 
@@ -80,7 +77,13 @@ These were previous tasks you completed:
 
 Begin!
 
-Message: {input}
+ChatHistory: 
+"""+chatHistory+""""
+
+Message:
+{input}
+
+
 {agent_scratchpad}"""
 
     print({"prompt": template})
