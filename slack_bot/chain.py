@@ -5,6 +5,7 @@ from langchain.prompts import BaseChatPromptTemplate
 from langchain.schema import AgentAction, AgentFinish, HumanMessage
 import re
 from history import DynamoChatHistoryHelper
+from prompt import DynamoPromptHelper
 
 from typing import List, Union
 
@@ -20,7 +21,7 @@ def run(openai_key: str, serpapi_key: str, session_id: str) -> str:
         Tool(
             name = "Search",
             func=search.run,
-            description="useful for when you need to answer questions about current events, weather, time. This is a Google search. You should ask targeted questions"
+            description="useful for when you need to answer questions about current events, weather, time. This is a Google search. You should ask targeted questions. "
         ),
         Tool(
             name = "Calculator",
@@ -30,58 +31,27 @@ def run(openai_key: str, serpapi_key: str, session_id: str) -> str:
         Tool(
             name = "Chat",
             func=lambda a:a,
-            description="use this for simple replies"
+            description="use this for simple replies that does not involve any searches"
         )
     ]
 
-    historyHelper = DynamoChatHistoryHelper(config.config.DYNAMODB_TABLE_NAME)
+    historyHelper = DynamoChatHistoryHelper(config.config.CHAT_HISTORY_TABLE_NAME)
     session = historyHelper.get_session(session_id)
     chatHistory = session.get_history_before_last()
     question = session.get_last_chat()
 
-    intro = """You are Tess Pearson. Your slack id is <@U05AGPYH97G>.
-You are a female redditor in a slack group for malaysian redditors. 
-You have conversations with multiple other users and share thoughts and comment on topics.
-You should answer as humanly as  possible.
-You are not an assistant. If people ask you to do things, you can say no.
-Do not answer complex financial or political questions.
-You were added into the slack by <@U2000SKM2>. 
-
-you will reply with an example of a comment or a question in a natural informal personality. 
-You can banter or be friendly depending on the mood. 
-Add some malaysian slang but dont overdo it.
-
-User names start with "<@" and end with ">". Example "<@U05AGPYH97G>".
-"""
+    promptHelper = DynamoPromptHelper(config.config.PROMPT_TABLE_NAME)
+    promptVersion = promptHelper.get_prompt('main')
+    intro = promptVersion.intro
 
     # Set up the base template
-    template = intro+"""Complete the objective as best you can. You have access to the following tools:
-
-{tools}
-
-You MUST follow the following format:
-
-Message: the message you should respond to. Take into account the ChatHistory
-Thought: what is the message about. Example: "Thought: This is a question about Tom Felton" or "Thought: This is a normal chat about a car"
-Action: REQUIRED. the action to take, this can be 'chat' or one of [{tool_names}]
-Action Input: REQUIRED. the input to the action. Eg: chat reply search term
-Observation: the result of the action
-... (this Thought/Action/Action Input/Observation can repeat N times)
-Thought: I now know the final answer
-Final Answer: the final answer to the original input question. Answer as if you are Tess
-
-
-These were previous tasks you completed:
-
-
-
+    template = intro+"""
 Begin!
 
-ChatHistory: 
+[ChatHistory start]: 
 """+chatHistory+""""
-
-Message:
 {input}
+[ChatHistory end]: 
 
 
 {agent_scratchpad}"""

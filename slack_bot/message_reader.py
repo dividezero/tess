@@ -42,7 +42,7 @@ def handler(event, context):
     slack_message = SlackMessage(body)
     print('slack_message', body)
     print('slack_message.channel', slack_message.channel)
-    history_helper = DynamoChatHistoryHelper(config.config.DYNAMODB_TABLE_NAME)
+    history_helper = DynamoChatHistoryHelper(config.config.CHAT_HISTORY_TABLE_NAME)
     session = history_helper.get_session(slack_message.channel)
     if not session:
         session= ChatSession(sessionId=slack_message.channel, history=[], lastEventId="")

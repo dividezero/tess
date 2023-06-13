@@ -15,10 +15,16 @@ class SlackBotApp(Stack):
     def __init__(self, app: App, id: str) -> None:
         super().__init__(app, id)
 
-        table = dynamodb.Table(self, "table", table_name=config.config.DYNAMODB_TABLE_NAME, 
-            partition_key=dynamodb.Attribute(name="SessionId", type=dynamodb.AttributeType.STRING),
-            removal_policy=RemovalPolicy.DESTROY
-        )
+        chat_history_table = dynamodb.Table(self, "table_chat_history", table_name=config.config.CHAT_HISTORY_TABLE_NAME,
+                               partition_key=dynamodb.Attribute(name="SessionId", type=dynamodb.AttributeType.STRING),
+                               removal_policy=RemovalPolicy.DESTROY
+                               )
+
+        prompt_table = dynamodb.Table(self, "table_prompt", table_name=config.config.PROMPT_TABLE_NAME,
+                               partition_key=dynamodb.Attribute(name="PromptId", type=dynamodb.AttributeType.STRING),
+                               removal_policy=RemovalPolicy.DESTROY
+                               )
+
 
         queue = sqs.Queue(
             self,
@@ -44,7 +50,8 @@ class SlackBotApp(Stack):
         )
 
         queue.grant_send_messages(handler)
-        table.grant_read_write_data(handler)
+        chat_history_table.grant_read_write_data(handler)
+        prompt_table.grant_read_write_data(handler)
 
         secret = secretsmanager.Secret.from_secret_name_v2(self, 'secret', config.config.API_KEYS_SECRET_NAME)
         secret.grant_read(handler)
@@ -72,7 +79,8 @@ class SlackBotApp(Stack):
         )
         secret.grant_read(writer_handler)
         queue.grant_consume_messages(writer_handler)
-        table.grant_read_write_data(writer_handler)
+        chat_history_table.grant_read_write_data(writer_handler)
+        prompt_table.grant_read_write_data(writer_handler)
 
         writer_handler.add_event_source(event_sources.SqsEventSource(queue))
 

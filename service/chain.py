@@ -34,7 +34,7 @@ def run(api_key: str, session_id: str, prompt: str) -> Tuple[str, str]:
         session_id = str(uuid4())
     
     chat_memory = DynamoDBChatMessageHistory(
-        table_name=config.config.DYNAMODB_TABLE_NAME,
+        table_name=config.config.CHAT_HISTORY_TABLE_NAME,
         session_id=session_id
     )
     messages = chat_memory.messages
@@ -46,7 +46,7 @@ def run(api_key: str, session_id: str, prompt: str) -> Tuple[str, str]:
     if messages:
         session_id = str(uuid4())
         chat_memory = DynamoDBChatMessageHistory(
-            table_name=config.config.DYNAMODB_TABLE_NAME,
+            table_name=config.config.CHAT_HISTORY_TABLE_NAME,
             session_id=session_id
         )
         # This is a workaround at the moment. Ideally, this should

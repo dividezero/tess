@@ -8,5 +8,5 @@ pip install google-search-results -t dist_writer
 
 #remove extraneous bits from installed packages
 rm -r dist_writer/*.dist-info
-cp config.py models.py utils.py chain.py message_writer.py history.py dist_writer/
+cp config.py models.py utils.py chain.py message_writer.py history.py prompt.py dist_writer/
 cd dist_writer && zip -r lambda.zip *
